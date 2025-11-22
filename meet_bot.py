@@ -1,16 +1,17 @@
 import os
 import logging
-from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
-from telegram.ext import Application, CommandHandler, ContextTypes, InlineQueryHandler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import InlineQueryHandler
+from telegram import InlineQueryResultArticle, InputTextMessageContent
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from dotenv import load_dotenv
 import uuid
 from flask import Flask, request, abort
+import asyncio
 
-load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 SCOPES = ['https://www.googleapis.com/auth/meetings.space.created']
@@ -31,36 +32,24 @@ def get_meet_client():
     return build('meet', 'v2', credentials=creds,
                  discoveryServiceUrl='https://meet.googleapis.com/$discovery/rest?version=v2')
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Instant Meet Bot\nUse /meet or @yourbot meet in any chat!")
+def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    update.message.reply_text("Instant Meet Bot\nUse /meet or @yourbot meet in any chat!")
 
-async def meet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def meet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         client = get_meet_client()
-        response = client.spaces().create(
-            body={
-                "config": {
-                    "accessType": "OPEN"  
-                }
-            }
-        ).execute()
+        response = client.spaces().create(body={}).execute()
         link = response['meetingUri']
-        await update.message.reply_text(f"Instant Meet (open to all!)\nJoin → {link}")
+        update.message.reply_text(f"Instant Meet (open to all!)\nJoin → {link}")
     except Exception as e:
-        await update.message.reply_text(f"Error: {e}")
+        update.message.reply_text(f"Error: {e}")
 
-async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.inline_query.query.lower()
     if "meet" in query or query == "" or "link" in query or "room" in query:
         try:
             client = get_meet_client()
-            response = client.spaces().create(
-                body={
-                    "config": {
-                        "accessType": "OPEN"
-                    }
-                }
-            ).execute()
+            response = client.spaces().create(body={}).execute()
             link = response['meetingUri']
 
             results = [
@@ -73,40 +62,39 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                 )
             ]
-            await update.inline_query.answer(results, cache_time=1)
+            update.inline_query.answer(results, cache_time=1)
         except Exception as e:
             pass
 
 def create_app():
     flask_app = Flask(__name__)
-    application = Application.builder().token(os.getenv("BOT_TOKEN")).build()
+    token = os.getenv("BOT_TOKEN")
+    application = Application.builder().token(token).build()
 
+    # Sync handlers (Flask-friendly)
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("meet", meet))
     application.add_handler(InlineQueryHandler(inline_query))
 
-    @flask_app.route(f"/{os.getenv('BOT_TOKEN')}", methods=["POST"])
-    async def webhook():
-        if request.headers.get("content-type") == "application/json":
-            json_string = await request.get_json()
-            update = Update.de_json(json_string, application.bot)
-            await application.process_update(update)
-        else:
-            abort(403)
+    @flask_app.route(f"/{token}", methods=["POST"])
+    def webhook():
+        json_string = request.get_json()
+        update = Update.de_json(json_string, application.bot)
+        if update:
+            asyncio.run(application.process_update(update))
         return "OK"
 
-    # Health check for Render
     @flask_app.route("/")
     def health():
         return "Bot is alive!"
 
-    return flask_app, application
+    return flask_app
 
 def main():
     if not os.getenv("BOT_TOKEN"):
         raise ValueError("BOT_TOKEN not set")
 
-    flask_app, application = create_app()
+    flask_app = create_app()
     port = int(os.environ.get("PORT", 10000))
     flask_app.run(host="0.0.0.0", port=port, debug=False)
 
