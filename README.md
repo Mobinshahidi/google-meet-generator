@@ -76,6 +76,6 @@ Install with `pip install -r requirements.txt`:
 - Host approval? Rooms are open by default—test with guests.
 
 ## License
-MIT License. Feel free to fork and improve!
+[MIT License](LICENSE). Feel free to fork and improve!
 
 Built by Mobin Sahidi. Contributions welcome!
