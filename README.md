@@ -47,7 +47,44 @@ Install with `pip install -r requirements.txt`:
 - python-dotenv
 - flask
 
-### 6. Hosting on Render (Free 24/7)
+### 6. Run locally / project layout
+
+You can run the app directly using Python or inside Docker. The repository has been reorganized into a small package under `src/meet_bot`.
+
+Project layout (short):
+
+```
+. 
+├─ src/
+│  └─ meet_bot/        # package containing the app
+│     ├─ __main__.py   # entry point (python -m src.meet_bot)
+│     ├─ bot.py        # bot factory and handlers
+│     ├─ clients.py    # google meet client helper
+│     └─ web.py        # flask app factory
+├─ run.py              # convenience script
+├─ requirements.txt
+├─ Dockerfile
+└─ README.md
+```
+
+Run locally (from repo root):
+
+```bash
+cp .env.example .env
+# edit .env to set BOT_TOKEN and place credentials
+python run.py
+# or
+python -m src.meet_bot
+```
+
+Or with Docker:
+
+```bash
+docker build -t instant-meet-bot .
+docker run --env-file .env -p 10000:10000 instant-meet-bot
+```
+
+### 7. Hosting on Render (Free 24/7)
 1. Sign up at [render.com](https://render.com) with GitHub.
 2. New Web Service → Connect your repo.
 3. Runtime: Python.

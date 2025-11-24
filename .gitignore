@@ -4,3 +4,10 @@ credentials.json
 token.json
 __pycache__
 *.pyc
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
