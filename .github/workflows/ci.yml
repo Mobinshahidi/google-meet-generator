@@ -17,7 +17,7 @@ jobs:
           python-version: '3.11'
 
       - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PWD/src" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
