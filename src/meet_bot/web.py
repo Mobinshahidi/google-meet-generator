@@ -10,11 +10,11 @@ def create_app(bot: telebot.TeleBot, token: Optional[str] = None) -> Flask:
 
     @app.route(f"/{token}", methods=["POST"])
     def webhook():
-        if request.headers.get('content-type') == 'application/json':
-            json_string = request.get_data().decode('utf-8')
+        if request.headers.get("content-type") == "application/json":
+            json_string = request.get_data().decode("utf-8")
             update = telebot.types.Update.de_json(json_string)
             bot.process_new_updates([update])
-            return ''
+            return ""
         else:
             abort(403)
 
@@ -23,6 +23,7 @@ def create_app(bot: telebot.TeleBot, token: Optional[str] = None) -> Flask:
         return "Bot alive!"
 
     return app
+
 
 def run(app: Flask, host: str = "0.0.0.0", port: int = 10000):
     app.run(host=host, port=port)

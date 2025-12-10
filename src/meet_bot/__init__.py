@@ -2,6 +2,7 @@
 
 Public API for running the bot service.
 """
+
 __version__ = "0.1.0"
 
 from .web import create_app, run
