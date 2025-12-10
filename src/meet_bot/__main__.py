@@ -13,8 +13,14 @@ logging.basicConfig(level=logging.INFO)
 def main():
     load_dotenv()
     token = os.getenv("BOT_TOKEN")
+    allowed_users_str = os.getenv("ALLOWED_USERS", "")
+    allowed_users = None
+    if allowed_users_str:
+        allowed_users = [
+            int(x.strip()) for x in allowed_users_str.split(",") if x.strip()
+        ]
     bot = create_bot(token)
-    register_handlers(bot)
+    register_handlers(bot, allowed_users=allowed_users)
 
     if os.getenv("RUN_POLLING"):
         logging.info("Starting bot in Polling mode...")

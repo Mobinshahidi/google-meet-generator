@@ -18,15 +18,29 @@ def create_bot(token: Optional[str] = None):
     return telebot.TeleBot(token)
 
 
-def register_handlers(bot: telebot.TeleBot):
+def register_handlers(bot: telebot.TeleBot, allowed_users: Optional[list] = None):
+    def is_allowed(user_id):
+        if not allowed_users:
+            return True
+        return user_id in allowed_users
+
     @bot.message_handler(commands=["start"])
     def start(message):
+        if not is_allowed(message.from_user.id):
+            return
         bot.reply_to(
             message, "Instant Meet Bot\nUse /meet or @yourbot meet in any chat!"
         )
 
     @bot.message_handler(commands=["meet"])
     def meet(message):
+        if not is_allowed(message.from_user.id):
+            bot.reply_to(
+                message,
+                "⚠️ Authorization Required: You are not allowed to use this bot.",
+            )
+            return
+
         try:
             client = get_meet_client()
             response = (
@@ -47,6 +61,19 @@ def register_handlers(bot: telebot.TeleBot):
 
     @bot.inline_handler(lambda query: "meet" in query.query.lower() or not query.query)
     def inline_query(query):
+        if not is_allowed(query.from_user.id):
+            # Optionally return an unauthorized result or just nothing
+            r = types.InlineQueryResultArticle(
+                id=str(uuid.uuid4()),
+                title="Unauthorized",
+                description="You are not allowed to use this bot.",
+                input_message_content=types.InputTextMessageContent(
+                    "⚠️ Unauthorized usage request."
+                ),
+            )
+            bot.answer_inline_query(query.id, [r], cache_time=60)
+            return
+
         try:
             client = get_meet_client()
             response = (
