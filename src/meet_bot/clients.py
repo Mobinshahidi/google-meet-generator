@@ -6,7 +6,10 @@ from googleapiclient.discovery import build
 
 SCOPES = ["https://www.googleapis.com/auth/meetings.space.created"]
 
-def get_meet_client(token_file: str = "token.json", credentials_file: str = "credentials.json"):
+
+def get_meet_client(
+    token_file: str = "token.json", credentials_file: str = "credentials.json"
+):
     """Return an authorized Google Meet client (googleapiclient.discovery.Resource).
 
     This will read/write token_file and use credentials_file for the OAuth client configuration.
@@ -22,5 +25,9 @@ def get_meet_client(token_file: str = "token.json", credentials_file: str = "cre
             creds = flow.run_local_server(port=0)
         with open(token_file, "w") as f:
             f.write(creds.to_json())
-    return build("meet", "v2", credentials=creds,
-                 discoveryServiceUrl='https://meet.googleapis.com/$discovery/rest?version=v2')
+    return build(
+        "meet",
+        "v2",
+        credentials=creds,
+        discoveryServiceUrl="https://meet.googleapis.com/$discovery/rest?version=v2",
+    )

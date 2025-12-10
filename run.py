@@ -3,6 +3,7 @@
 Usage: python run.py
 Or: python -m meet_bot
 """
+
 from src.meet_bot import __main__ as _main
 
 if __name__ == "__main__":
